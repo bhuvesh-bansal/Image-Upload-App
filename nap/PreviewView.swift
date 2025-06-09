@@ -9,6 +9,8 @@ struct PreviewView: View {
     @State private var referenceName: String = ""
     @State private var isLoading = false
     @State private var uploadError: String?
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
 
     var body: some View {
         VStack {
@@ -42,7 +44,12 @@ struct PreviewView: View {
                 .padding(.horizontal)
             
             Button(action: {
-                uploadImageAndMetadata()
+                if referenceName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    alertMessage = "You need to provide a reference name before uploading."
+                    showingAlert = true
+                } else {
+                    uploadImageAndMetadata()
+                }
             }) {
                 if isLoading {
                     ProgressView()
@@ -70,6 +77,11 @@ struct PreviewView: View {
             }
             
             Spacer()
+        }
+        .alert("Missing Information", isPresented: $showingAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(alertMessage)
         }
     }
 

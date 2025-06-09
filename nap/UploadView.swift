@@ -54,9 +54,8 @@ struct UploadView: View {
                 .padding(.vertical, 20)
                 .foregroundColor(.gray)
             
-            // Open Camera Section
             Button(action: {
-                isShowingCamera = true // Action to open camera
+                isShowingCamera = true
             }) {
                 VStack {
                     Image(systemName: "camera")
@@ -83,7 +82,7 @@ struct UploadView: View {
             Spacer()
         }
         .navigationTitle("Upload")
-        .navigationBarHidden(true) // Hide default navigation bar for custom tab bar
+        .navigationBarHidden(true)
     }
 }
 
