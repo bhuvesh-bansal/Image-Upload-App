@@ -32,15 +32,18 @@ struct ImagesGalleryView: View {
                 } else {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(images) { item in
-                            VStack {
-                                KFImage(URL(string: item.url))
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 150, height: 150)
-                                    .cornerRadius(10)
-                                    .clipped()
-                                Text(item.name)
-                                    .font(.caption)
+                            NavigationLink(destination: ImageDetailView(image: item)) {
+                                VStack {
+                                    KFImage(URL(string: item.url))
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 150, height: 150)
+                                        .cornerRadius(10)
+                                        .clipped()
+                                    Text(item.name)
+                                        .font(.caption)
+                                        .foregroundColor(.primary)
+                                }
                             }
                         }
                     }
