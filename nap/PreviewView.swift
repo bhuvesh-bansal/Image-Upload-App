@@ -3,6 +3,32 @@ import UIKit
 import FirebaseFirestore
 import FirebaseStorage
 
+// MARK: - UIImage Extension for Resizing
+extension UIImage {
+    func resized(to maxDimension: CGFloat) -> UIImage? {
+        let originalWidth = self.size.width
+        let originalHeight = self.size.height
+        var newWidth: CGFloat = 0
+        var newHeight: CGFloat = 0
+
+        if originalWidth > originalHeight {
+            newWidth = maxDimension
+            newHeight = originalHeight * (maxDimension / originalWidth)
+        } else {
+            newHeight = maxDimension
+            newWidth = originalWidth * (maxDimension / originalHeight)
+        }
+
+        let newSize = CGSize(width: newWidth, height: newHeight)
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        self.draw(in: CGRect(origin: .zero, size: newSize))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return newImage
+    }
+}
+
 struct PreviewView: View {
     @Binding var isPresented: Bool
     var selectedUIImage: UIImage?
@@ -86,9 +112,19 @@ struct PreviewView: View {
 
     private func uploadImageAndMetadata() {
         print("uploadImageAndMetadata called. Current isLoading: \(isLoading)")
-        guard let uiImage = selectedUIImage,
-              let imageData = uiImage.jpegData(compressionQuality: 0.8) else {
-            uploadError = "No image selected or unable to convert to data."
+        guard let uiImage = selectedUIImage else {
+            uploadError = "No image selected."
+            return
+        }
+
+        // Resize the image before converting to JPEG data
+        guard let resizedImage = uiImage.resized(to: 1024) else { // Resize to max 1024 pixels on longest side
+            uploadError = "Failed to resize image."
+            return
+        }
+        
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.8) else { // Compress after resizing
+            uploadError = "Unable to convert image to data."
             return
         }
 
@@ -97,7 +133,7 @@ struct PreviewView: View {
         uploadError = nil
 
         let storageRef = Storage.storage().reference()
-        let imageFileName = UUID().uuidString + ".jpg"
+        let imageFileName = UUID().uuidString + ".jpg" 
         let imageRef = storageRef.child("images/\(imageFileName)")
 
         imageRef.putData(imageData, metadata: nil) { metadata, error in
