@@ -38,8 +38,8 @@ struct UploadView: View {
             .sheet(isPresented: $isShowingImagePicker) {
                 PhotoPicker(selectedImage: $uiImage)
             }
-            .onChange(of: uiImage) { newImage in
-                if let newImage = newImage {
+            .onChange(of: uiImage) { newValue in
+                if let newImage = newValue {
                     self.selectedImage = Image(uiImage: newImage)
                     isShowingPreview = true
                 }

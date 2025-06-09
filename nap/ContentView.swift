@@ -12,14 +12,21 @@ struct ContentView: View {
         TabView {
             UploadView()
                 .tabItem {
-                    Label("Upload", systemImage: "house.fill")
+                    VStack {
+                        Image(systemName: "house.fill")
+                        Text("Upload")
+                    }
                 }
             
             ImagesGalleryView()
                 .tabItem {
-                    Label("Images", systemImage: "person.fill")
+                    VStack {
+                        Image(systemName: "person.fill")
+                        Text("Images")
+                    }
                 }
         }
+        .tint(.green)
     }
 }
 

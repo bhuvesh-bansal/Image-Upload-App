@@ -51,21 +51,20 @@ struct PreviewView: View {
                     uploadImageAndMetadata()
                 }
             }) {
-                if isLoading {
-                    ProgressView()
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.green)
-                        .cornerRadius(10)
-                } else {
-                    Text("Submit")
+                HStack {
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .padding(.trailing, 5)
+                    }
+                    Text(isLoading ? "Uploading..." : "Submit")
                         .font(.headline)
                         .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.green)
-                        .cornerRadius(10)
                 }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.green)
+                .cornerRadius(10)
             }
             .padding()
             .disabled(isLoading)
@@ -86,6 +85,7 @@ struct PreviewView: View {
     }
 
     private func uploadImageAndMetadata() {
+        print("uploadImageAndMetadata called. Current isLoading: \(isLoading)")
         guard let uiImage = selectedUIImage,
               let imageData = uiImage.jpegData(compressionQuality: 0.8) else {
             uploadError = "No image selected or unable to convert to data."
@@ -93,6 +93,7 @@ struct PreviewView: View {
         }
 
         isLoading = true
+        print("isLoading set to true.")
         uploadError = nil
 
         let storageRef = Storage.storage().reference()
@@ -100,18 +101,31 @@ struct PreviewView: View {
         let imageRef = storageRef.child("images/\(imageFileName)")
 
         imageRef.putData(imageData, metadata: nil) { metadata, error in
-            guard error == nil else {
-                print("Error uploading image: \(error!.localizedDescription)")
-                self.uploadError = "Error uploading image: \(error!.localizedDescription)"
-                self.isLoading = false
+            if let error = error {
+                print("Error uploading image: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.uploadError = "Error uploading image: \(error.localizedDescription)"
+                    self.isLoading = false
+                }
                 return
             }
 
             imageRef.downloadURL { url, error in
+                if let error = error {
+                    print("Error getting download URL: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self.uploadError = "Error getting download URL: \(error.localizedDescription)"
+                        self.isLoading = false
+                    }
+                    return
+                }
+
                 guard let downloadURL = url else {
-                    print("Error getting download URL: \(error!.localizedDescription)")
-                    self.uploadError = "Error getting download URL: \(error!.localizedDescription)"
-                    self.isLoading = false
+                    print("Download URL is nil, but no error reported.")
+                    DispatchQueue.main.async {
+                        self.uploadError = "Failed to get image download URL."
+                        self.isLoading = false
+                    }
                     return
                 }
 
@@ -121,13 +135,15 @@ struct PreviewView: View {
                     "imageURL": downloadURL.absoluteString,
                     "timestamp": FieldValue.serverTimestamp()
                 ]) { error in
-                    self.isLoading = false
-                    if let error = error {
-                        print("Error saving document: \(error.localizedDescription)")
-                        self.uploadError = "Error saving image data: \(error.localizedDescription)"
-                    } else {
-                        print("Image and metadata saved successfully!")
-                        self.isPresented = false
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        if let error = error {
+                            print("Error saving document: \(error.localizedDescription)")
+                            self.uploadError = "Error saving image data: \(error.localizedDescription)"
+                        } else {
+                            print("Image and metadata saved successfully!")
+                            self.isPresented = false
+                        }
                     }
                 }
             }
