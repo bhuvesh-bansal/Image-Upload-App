@@ -20,7 +20,7 @@ struct ContentView: View {
             
             ImagesGalleryView()
                 .tabItem {
-                    VStack {
+        VStack {
                         Image(systemName: "person.fill")
                         Text("Images")
                     }
